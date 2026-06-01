@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Финансовый директор на аутсорсе для строительной компании</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0f172a',
+                            card: '#1e293b',
+                            accent: '#ea580c',
+                            accentHover: '#c2410c',
+                            green: '#10b981',
+                            red: '#ef4444'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 1rem;
+        }
+        
+        .slider-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        #before-layer {
+            z-index: 2;
+            clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+        }
+        
+        #after-layer {
+            z-index: 1;
+        }
+        
+        .slider-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            opacity: 0;
+            cursor: ew-resize;
+            margin: 0;
+        }
+        
+        .slider-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 4px;
+            background-color: #ea580c;
+            z-index: 3;
+            transform: translateX(-50%);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .slider-handle::after {
+            content: '< >';
+            background-color: #ea580c;
+            color: white;
+            font-weight: bold;
+            padding: 8px;
+            border-radius: 50%;
+            font-size: 12px;
+            letter-spacing: -1px;
+            white-space: nowrap;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 1. Стили для прозрачных ползунков (только для верхнего дашборда) */
+        input[type="range"].custom-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: transparent;
+            outline: none;
+            cursor: pointer;
+        }
+        input[type="range"].custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border: 2px solid currentColor;
+            margin-top: -4px;
+        }
+        input[type="range"].absolute-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 20;
+        }
+
+        /* 2. Стили для ползунков калькулятора ROI (с видимой линией трека) */
+        input[type="range"].track-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #334155; /* slate-700 - цвет линии */
+            border-radius: 9999px;
+            outline: none;
+            cursor: pointer;
+        }
+        input[type="range"].track-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            border: 3px solid currentColor; /* цвет обводки берется из style="color:..." */
+            margin-top: 0;
+        }
+
+        /* Цвета обводки ползунков для разных метрик */
+        #revenue-slider::-webkit-slider-thumb { color: #3b82f6; }
+        #cost-slider::-webkit-slider-thumb { color: #ea580c; }
+
+    </style>
+</head>
+<body class="font-sans text-slate-800 bg-slate-50 antialiased">
+
+    <!-- Навигация -->
+    <nav class="bg-brand-dark text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="#" class="flex items-center gap-2 hover:opacity-80 transition">
+                    <i data-lucide="bar-chart-3" class="w-8 h-8 text-brand-accent"></i>
+                    <span class="font-bold text-xl tracking-tight">FinBuild <span class="font-light text-slate-400">Partners</span></span>
+                </a>
+                <div class="hidden md:flex gap-6 items-center">
+                    <a href="mailto:polina.skra@gmail.com" class="text-sm text-slate-300 hover:text-white transition flex items-center gap-1.5">
+                        <i data-lucide="mail" class="w-4 h-4"></i> Написать нам
+                    </a>
+                    <a href="#contact" class="text-sm text-slate-300 hover:text-white transition flex items-center gap-1.5">
+                        <i data-lucide="phone" class="w-4 h-4"></i> Телефон
+                    </a>
+                    <a href="#pricing" class="text-sm text-slate-300 hover:text-white transition flex items-center gap-1.5">
+                        <i data-lucide="credit-card" class="w-4 h-4"></i> Узнать о тарифах
+                    </a>
+                </div>
+                <div>
+                    <a href="#contact" class="bg-brand-accent hover:bg-brand-accentHover text-white px-5 py-2.5 rounded-lg font-semibold transition shadow-lg text-sm">
+                        Бесплатный разбор
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Экран 1: Главный экран -->
+    <section class="bg-brand-dark text-white pt-16 pb-24 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 32px 32px;"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-8">
+                    <div class="inline-block bg-slate-800 border border-slate-700 rounded-full px-4 py-1.5 text-sm font-medium text-brand-accent">
+                        Для владельцев малого строительного бизнеса
+                    </div>
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">
+                        Ваша стройка съедает деньги, а реальной прибыли не видно?
+                    </h1>
+                    <p class="text-lg md:text-xl text-slate-300 max-w-xl">
+                        Настроим прозрачный управленческий учет за 14 дней. Избавим от кассовых разрывов и найдем скрытые деньги на ваших объектах без найма дорогого CFO в штат.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                        <button type="button" data-scroll-to="quiz" class="bg-brand-accent hover:bg-brand-accentHover text-white text-center px-8 py-4 rounded-xl font-bold text-lg transition shadow-lg shadow-brand-accent/30 flex items-center justify-center gap-2">
+                            Узнать, где мы теряем деньги
+                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="hidden lg:block relative">
+                    <div class="bg-brand-card p-6 rounded-2xl border border-slate-700 shadow-2xl relative z-10 transform translate-x-4 mb-6">
+                        <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+                            <div class="font-semibold">Финансовая сводка: интерактив</div>
+                            <div class="text-brand-green flex items-center gap-1 font-bold" id="profit-growth-summary">
+                                <i data-lucide="trending-up" class="w-4 h-4"></i> +<span id="profit-growth-percent">14.4</span>%
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between text-sm text-slate-400 mb-2"><span>Выручка</span><span id="revenue-value">45 200 000 ₽</span></div>
+                                <div class="relative h-2 w-full bg-slate-800 rounded-full">
+                                    <div class="bg-blue-500 h-2 rounded-full absolute top-0 left-0 pointer-events-none" style="width: 80%" id="revenue-bar"></div>
+                                    <input type="range" min="30000000" max="60000000" value="45200000" step="100000" class="custom-slider absolute-slider" id="revenue-slider" oninput="updateDashboard()">
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm text-slate-400 mb-2"><span>Себестоимость</span><span id="cost-value">32 100 000 ₽</span></div>
+                                <div class="relative h-2 w-full bg-slate-800 rounded-full">
+                                    <div class="bg-brand-accent h-2 rounded-full absolute top-0 left-0 pointer-events-none" style="width: 71%" id="cost-bar"></div>
+                                    <input type="range" min="20000000" max="50000000" value="32100000" step="100000" class="custom-slider absolute-slider" id="cost-slider" oninput="updateDashboard()">
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm text-slate-400 mb-2"><span>Чистая прибыль</span><span class="text-brand-green font-bold" id="profit-value">13 100 000 ₽</span></div>
+                                <div class="relative h-2 w-full bg-slate-800 rounded-full">
+                                    <div class="bg-brand-green h-2 rounded-full absolute top-0 left-0 pointer-events-none transition-all duration-300" style="width: 29%" id="profit-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-4 text-center">Двигайте ползунки Выручки и Себестоимости, чтобы увидеть изменение Прибыли.</p>
+                    </div>
+
+                    <div class="absolute -top-6 -right-6 w-32 h-32 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+                    <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-brand-accent rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Экран 2: Интерактивный Диагноз -->
+    <section id="quiz" class="py-24 bg-white scroll-mt-20">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">Контролируете ли вы свои деньги?</h2>
+                <p class="text-slate-500 text-lg">Пройдите быстрый аудит из 3 вопросов, чтобы оценить здоровье вашей финансовой системы.</p>
+            </div>
+
+            <div id="quiz-container" class="bg-slate-50 border border-slate-200 rounded-2xl p-8 shadow-sm relative overflow-hidden min-h-[300px]">
+                <div class="quiz-step" id="step-1">
+                    <div class="text-sm text-brand-accent font-bold mb-2">Вопрос 1 из 3</div>
+                    <h3 class="text-xl font-semibold mb-6">Вы знаете точную рентабельность последнего сданного объекта до рубля?</h3>
+                    <div class="space-y-3">
+                        <button onclick="nextStep(2, 'yes')" class="w-full text-left px-6 py-4 rounded-xl border border-slate-200 bg-white hover:border-brand-accent hover:bg-orange-50 transition font-medium">Да, вижу все цифры</button>
+                        <button onclick="nextStep(2, 'no')" class="w-full text-left px-6 py-4 rounded-xl border border-slate-200 bg-white hover:border-brand-accent hover:bg-orange-50 transition font-medium">Нет, считаем примерно</button>
+                        <button onclick="nextStep(2, 'not_sure')" class="w-full text-left px-6 py-4 rounded-xl border border-slate-200 bg-white hover:border-brand-accent hover:bg-orange-50 transition font-medium">Не уверен, считаю после окончания года</button>
+                    </div>
+                </div>
+
+                <div class="quiz-step hidden" id="step-2">
+                    <div class="text-sm text-brand-accent font-bold mb-2">Вопрос 2 из 3</div>
+                    <h3 class="text-xl font-semibold mb-6">Вы уверены, что завтра вам хватит денег на оплату материалов и ЗП рабочим (нет риска кассового разрыва)?</h3>
+                    <div class="space-y-3">
+                        <button onclick="nextStep(3, 'yes')" class="w-full text-left px-6 py-4 rounded-xl border border-slate-200 bg-white hover:border-brand-accent hover:bg-orange-50 transition font-medium">Да, веду платежный календарь</button>
+                        <button onclick="nextStep(3, 'no')" class="w-full text-left px-6 py-4 rounded-xl border border-slate-200 bg-white hover:border-brand-accent hover:bg-orange-50 transition font-medium">Нет, часто перекрываем из других проектов</button>
+                        <button onclick="nextStep(3, 'not_sure')" class="w-full text-left px-6 py-4 rounded-xl border border-slate-200 bg-white hover:border-brand-accent hover:bg-orange-50 transition font-medium">Не уверен, живем по факту поступлений</button>
+                    </div>
+                </div>
+
+                <div class="quiz-step hidden" id="step-3">
+                    <div class="text-sm text-brand-accent font-bold mb-2">Вопрос 3 из 3</div>
+                    <h3 class="text-xl font-semibold mb-6">Ваш текущий бухгалтер дает вам советы, как увеличить прибыль, а не только сдает отчеты в налоговую?</h3>
+                    <div class="space-y-3">
+                        <button onclick="showResult('yes')" class="w-full text-left px-6 py-4 rounded-xl border border-slate-200 bg-white hover:border-brand-accent hover:bg-orange-50 transition font-medium">Да, мы постоянно анализируем рост</button>
+                        <button onclick="showResult('no')" class="w-full text-left px-6 py-4 rounded-xl border border-slate-200 bg-white hover:border-brand-accent hover:bg-orange-50 transition font-medium">Нет, только считает налоги</button>
+                        <button onclick="showResult('not_sure')" class="w-full text-left px-6 py-4 rounded-xl border border-slate-200 bg-white hover:border-brand-accent hover:bg-orange-50 transition font-medium">Не уверен, это не его задача</button>
+                    </div>
+                </div>
+
+                <div class="quiz-step hidden fade-in text-center pt-4" id="quiz-result">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-100 text-brand-accent mb-6">
+                        <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Ваша финансовая система требует настройки</h3>
+                    <p class="text-slate-600 mb-8 max-w-lg mx-auto">
+                        Вы принимаете решения вслепую, что типично для 80% стройкомпаний. Работа "по котловому методу" съедает вашу реальную прибыль. Мы знаем, как включить свет.
+                    </p>
+                    <a href="https://t.me/polina_skra" target="_blank" rel="noopener noreferrer" class="inline-flex bg-brand-dark hover:bg-slate-800 text-white px-8 py-3 rounded-lg font-semibold transition shadow-md">
+                        Записаться на разбор
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Экран 3: Визуализация "Было / Стало" -->
+    <section class="py-24 bg-brand-dark text-white overflow-hidden">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">От хаоса к системе за 14 дней</h2>
+                <p class="text-slate-400 text-lg">Потяните ползунок, чтобы увидеть разницу в управлении бизнесом.</p>
+            </div>
+
+            <div class="w-full h-[500px] bg-slate-800 rounded-2xl border border-slate-600 shadow-2xl relative p-2 md:p-4">
+                <div class="slider-container" id="ba-container">
+                    <div class="slider-layer bg-slate-900 rounded-xl p-8 flex flex-col justify-center border border-slate-700" id="after-layer">
+                        <div class="max-w-3xl mx-auto w-full">
+                            <div class="flex items-center justify-between mb-8">
+                                <h3 class="text-2xl font-bold text-white flex items-center gap-2">
+                                    <i data-lucide="layout-dashboard" class="text-brand-green"></i>
+                                    Все показатели на одном экране
+                                </h3>
+                                <span class="bg-brand-green/20 text-brand-green px-3 py-1 rounded-full text-sm font-bold">Стало</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-6 mb-6">
+                                <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                                    <div class="text-slate-400 text-sm mb-1">Чистая прибыль</div>
+                                    <div class="text-2xl font-bold text-brand-green">14 500 000 ₽</div>
+                                </div>
+                                <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                                    <div class="text-slate-400 text-sm mb-1">Рентабельность</div>
+                                    <div class="text-2xl font-bold text-white">22.4%</div>
+                                </div>
+                                <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
+                                    <div class="text-slate-400 text-sm mb-1">Кассовый разрыв</div>
+                                    <div class="text-2xl font-bold text-slate-500">0 ₽</div>
+                                </div>
+                            </div>
+                            <div class="w-full h-32 bg-slate-800 rounded-lg border border-slate-700 relative overflow-hidden">
+                                <div class="absolute bottom-0 left-0 w-full h-full flex items-end px-4 gap-2 pb-4">
+                                    <div class="w-full bg-brand-green/80 rounded-t-sm" style="height: 40%"></div>
+                                    <div class="w-full bg-brand-green/80 rounded-t-sm" style="height: 60%"></div>
+                                    <div class="w-full bg-brand-green/80 rounded-t-sm" style="height: 50%"></div>
+                                    <div class="w-full bg-brand-accent rounded-t-sm" style="height: 80%"></div>
+                                    <div class="w-full bg-brand-green/80 rounded-t-sm" style="height: 70%"></div>
+                                    <div class="w-full bg-brand-green/80 rounded-t-sm" style="height: 90%"></div>
+                                </div>
+                            </div>
+                            <p class="mt-6 text-slate-400 text-center font-medium">Точный прогноз на месяц вперед. Спокойный сон собственника.</p>
+                        </div>
+                    </div>
+
+                    <div class="slider-layer bg-red-50 rounded-xl p-8 flex flex-col justify-center border border-red-200" id="before-layer">
+                         <div class="max-w-3xl mx-auto w-full relative">
+                            <div class="flex items-center justify-between mb-8">
+                                <h3 class="text-2xl font-bold text-brand-red flex items-center gap-2">
+                                    <i data-lucide="file-spreadsheet" class="text-brand-red"></i>
+                                    Хаос в Excel
+                                </h3>
+                                <span class="bg-red-200 text-brand-red px-3 py-1 rounded-full text-sm font-bold">Было</span>
+                            </div>
+                            
+                            <div class="overflow-hidden border border-red-300 rounded bg-white shadow-inner opacity-90">
+                                <table class="w-full text-xs text-left text-slate-800">
+                                    <thead class="bg-red-100 text-red-900">
+                                        <tr><th class="p-2 border-b border-red-200">Проект</th><th class="p-2 border-b border-red-200">Доход</th><th class="p-2 border-b border-red-200">Расход</th><th class="p-2 border-b border-red-200 bg-red-200">Где деньги???</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td class="p-2 border-b border-slate-200">ЖК Сказка</td><td class="p-2 border-b border-slate-200">12 000 000</td><td class="p-2 border-b border-slate-200 bg-red-100 font-bold text-red-600">14 500 000</td><td class="p-2 border-b border-slate-200">Ошибка формулы #REF</td></tr>
+                                        <tr><td class="p-2 border-b border-slate-200">Склад №4</td><td class="p-2 border-b border-slate-200">5 000 000</td><td class="p-2 border-b border-slate-200">4 800 000</td><td class="p-2 border-b border-slate-200">Не сходятся акты</td></tr>
+                                        <tr><td class="p-2 border-b border-slate-200 font-bold">ИТОГО</td><td class="p-2 border-b border-slate-200">-</td><td class="p-2 border-b border-slate-200">-</td><td class="p-2 border-b border-slate-200 bg-red-500 text-white font-bold">КАССОВЫЙ РАЗРЫВ</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-4 flex gap-2">
+                                <span class="bg-slate-200 text-slate-500 text-xs px-2 py-1 rounded border border-slate-300">Лист 1 (копия)</span>
+                                <span class="bg-white text-slate-800 text-xs px-2 py-1 rounded border border-slate-300 shadow-sm">ФИНАНСЫ_АВГУСТ_ФИНАЛ2</span>
+                                <span class="bg-slate-200 text-slate-500 text-xs px-2 py-1 rounded border border-slate-300">Сводка_старая</span>
+                            </div>
+
+                            <p class="mt-6 text-brand-red text-center font-bold">Неясная себестоимость. Страх перед выплатой зарплат.</p>
+                        </div>
+                    </div>
+
+                    <input type="range" min="0" max="100" value="50" class="slider-input" id="ba-slider" oninput="updateSlider(this.value)">
+                    <div class="slider-handle" id="ba-handle"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Экран 4: Демонстрация Продукта -->
+    <section id="product" class="py-24 bg-slate-50 scroll-mt-20">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">Вот так вы будете видеть свой бизнес каждый день</h2>
+                <p class="text-slate-500 text-lg">Нажмите на вкладки, чтобы увидеть разные срезы управленческого учета.</p>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-lg overflow-hidden flex flex-col md:flex-row min-h-[450px]">
+                <div class="w-full md:w-64 bg-slate-50 border-r border-slate-200 flex flex-row md:flex-col p-4 gap-2 overflow-x-auto">
+                    <button onclick="switchTab('objects')" id="tab-objects" class="tab-btn active w-full text-left px-4 py-3 rounded-lg font-medium transition flex items-center gap-3 bg-white border border-slate-200 shadow-sm text-brand-accent">
+                        <i data-lucide="building-2" class="w-5 h-5"></i>
+                        Объекты
+                    </button>
+                    <button onclick="switchTab('cashflow')" id="tab-cashflow" class="tab-btn w-full text-left px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition flex items-center gap-3">
+                        <i data-lucide="banknote" class="w-5 h-5"></i>
+                        ДДС
+                    </button>
+                    <button onclick="switchTab('profit')" id="tab-profit" class="tab-btn w-full text-left px-4 py-3 rounded-lg font-medium text-slate-600 hover:bg-slate-100 transition flex items-center gap-3">
+                        <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                        ОПиУ (Прибыль)
+                    </button>
+                </div>
+
+                <div class="flex-1 p-8 bg-white relative">
+                    <div id="content-objects" class="tab-content fade-in">
+                        <h3 class="text-2xl font-bold mb-2">Аналитика по объектам</h3>
+                        <p class="text-slate-500 mb-8">С одного взгляда понятно: какие объекты тянут на дно, а какие приносят основную маржу.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="border border-slate-200 rounded-xl p-5 hover:border-brand-accent transition">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="font-bold text-lg">ЖК "Лесной массив"</div>
+                                    <div class="bg-brand-green/10 text-brand-green text-sm px-3 py-1 rounded-full font-bold">В норме</div>
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                    <div><span class="text-slate-500 block">Выручка:</span><span class="font-bold">12 000 000 ₽</span></div>
+                                    <div><span class="text-slate-500 block">Расходы:</span><span class="font-bold">9 500 000 ₽</span></div>
+                                    <div><span class="text-slate-500 block">Рентабельность:</span><span class="font-bold text-brand-green">20.8%</span></div>
+                                    <div><span class="text-slate-500 block">Статус КС:</span><span class="font-bold">Подписаны</span></div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-red-200 bg-red-50 rounded-xl p-5">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="font-bold text-lg">Реконструкция ТЦ</div>
+                                    <div class="bg-brand-red/10 text-brand-red text-sm px-3 py-1 rounded-full font-bold">Внимание</div>
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                    <div><span class="text-slate-500 block">Выручка:</span><span class="font-bold">8 000 000 ₽</span></div>
+                                    <div><span class="text-slate-500 block">Расходы:</span><span class="font-bold">8 500 000 ₽</span></div>
+                                    <div><span class="text-slate-500 block">Рентабельность:</span><span class="font-bold text-brand-red">-6.2%</span></div>
+                                    <div><span class="text-slate-500 block">Статус КС:</span><span class="font-bold">Задержка</span></div>
+                                </div>
+                                <div class="mt-4 text-xs text-brand-red bg-white border border-red-100 p-2 rounded">
+                                    Рекомендация CFO: остановить закупку материалов до подписания доп. соглашения заказчиком.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-cashflow" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold mb-2">Движение денежных средств (ДДС)</h3>
+                        <p class="text-slate-500 mb-8">Вы точно знаете: сколько у вас 'свободных' денег и когда придет следующая оплата.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                                <div class="text-slate-500 text-sm mb-1">Остаток на счетах</div>
+                                <div class="text-2xl font-bold">1 250 000 ₽</div>
+                            </div>
+                            <div class="bg-green-50 p-5 rounded-xl border border-green-200">
+                                <div class="text-green-700 text-sm mb-1">Ожидаемые поступления</div>
+                                <div class="text-2xl font-bold text-green-700">+3 000 000 ₽</div>
+                            </div>
+                            <div class="bg-orange-50 p-5 rounded-xl border border-orange-200">
+                                <div class="text-brand-accent text-sm mb-1">Плановые выплаты (неделя)</div>
+                                <div class="text-2xl font-bold text-brand-accent">-4 100 000 ₽</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-800 text-white p-6 rounded-xl relative overflow-hidden">
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i data-lucide="shield-check" class="text-brand-green w-6 h-6"></i>
+                                    <span class="font-bold text-lg">Платежный календарь внедрен</span>
+                                </div>
+                                <p class="text-sm text-slate-300">Риск кассового разрыва в этом месяце: 0%. Средства зарезервированы под ФОТ и налоги.</p>
+                            </div>
+                            <i data-lucide="calendar-check" class="absolute right-[-20px] bottom-[-20px] w-32 h-32 text-slate-700 opacity-50"></i>
+                        </div>
+                    </div>
+
+                    <div id="content-profit" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold mb-2">Отчет о прибылях и убытках (ОПиУ)</h3>
+                        <p class="text-slate-500 mb-8">Показываем реальную, очищенную чистую прибыль бизнеса по методу начисления, а не просто деньги в кассе.</p>
+                        
+                        <div class="w-full">
+                            <div class="flex justify-between py-3 border-b border-slate-200">
+                                <span class="text-slate-600 font-medium">Выручка по всем проектам</span>
+                                <span class="font-bold">45 000 000 ₽</span>
+                            </div>
+                            <div class="flex justify-between py-3 border-b border-slate-200">
+                                <span class="text-slate-600 font-medium ml-4">Прямые расходы (себестоимость)</span>
+                                <span class="font-bold text-slate-500">-32 000 000 ₽</span>
+                            </div>
+                            <div class="flex justify-between py-3 border-b border-slate-200 bg-slate-50 px-2 rounded mt-2">
+                                <span class="text-slate-800 font-bold">Валовая прибыль</span>
+                                <span class="font-bold text-lg">13 000 000 ₽</span>
+                            </div>
+                            <div class="flex justify-between py-3 border-b border-slate-200 mt-2">
+                                <span class="text-slate-600 font-medium ml-4">Косвенные расходы (офис, маркетинг, % по кредитам)</span>
+                                <span class="font-bold text-slate-500">-6 500 000 ₽</span>
+                            </div>
+                            <div class="flex justify-between py-4 mt-4 bg-brand-dark text-white px-4 rounded-xl shadow-md">
+                                <span class="font-bold text-lg">Чистая прибыль (для дивидендов)</span>
+                                <span class="font-bold text-xl text-brand-green">6 500 000 ₽</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Экран: Калькулятор выгоды и окупаемости CFO -->
+    <section id="roi-calculator" class="py-24 bg-slate-900 text-white relative overflow-hidden scroll-mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold mb-4">Оцифруйте вашу выгоду от работы с CFO</h2>
+                <p class="text-slate-400 text-lg">Введите данные бизнеса и посмотрите: как быстро окупятся наши услуги.</p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- Блок 1: Строительные метрики -->
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-xl">
+                    <h3 class="text-xl font-bold mb-8 text-brand-accent flex items-center gap-2">
+                        <i data-lucide="calculator" class="w-6 h-6"></i>
+                        Точки роста прибыли
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Выручка в тысячах -->
+                        <div>
+                            <div class="flex justify-between items-center text-sm mb-2">
+                                <label for="adv-rev-input" class="text-slate-300">годовая выручка (в тыс. ₽):</label>
+                                <div class="relative">
+                                    <input type="text" id="adv-rev-input" class="bg-slate-900 border border-slate-600 text-white text-right font-bold rounded-lg px-3 py-1.5 w-36 focus:border-blue-500 focus:outline-none pr-8" value="100 000" oninput="handleFormattedInput('adv-rev')">
+                                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none">₽</span>
+                                </div>
+                            </div>
+                            <input type="range" min="30000" max="500000" step="1000" value="100000" class="track-slider w-full" style="color: #3b82f6;" id="adv-rev" oninput="handleFormattedSlider('adv-rev')">
+                        </div>
+                        
+                        <!-- Доля материалов -->
+                        <div>
+                            <div class="flex justify-between items-center text-sm mb-2">
+                                <label for="adv-mat-share-input" class="text-slate-300">доля материалов в себестоимости:</label>
+                                <div class="relative">
+                                    <input type="text" id="adv-mat-share-input" class="bg-slate-900 border border-slate-600 text-white text-right font-bold rounded-lg px-3 py-1.5 w-24 focus:border-slate-400 focus:outline-none pr-8" value="50" oninput="handleFormattedInput('adv-mat-share')">
+                                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none">%</span>
+                                </div>
+                            </div>
+                            <input type="range" min="30" max="80" step="1" value="50" class="track-slider w-full" style="color: #94a3b8;" id="adv-mat-share" oninput="handleFormattedSlider('adv-mat-share')">
+                        </div>
+
+                        <!-- Оптимизация закупок -->
+                        <div class="pt-6 border-t border-slate-700">
+                            <div class="flex justify-between items-center text-sm mb-2">
+                                <label for="adv-mat-sav-input" class="text-brand-green font-medium">оптимизация закупок (контроль CFO):</label>
+                                <div class="relative">
+                                    <input type="text" id="adv-mat-sav-input" class="bg-brand-green/10 border border-brand-green/30 text-brand-green text-right font-bold rounded-lg px-3 py-1.5 w-24 focus:border-brand-green focus:outline-none pr-8" value="5" oninput="handleFormattedInput('adv-mat-sav')">
+                                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-brand-green/70 pointer-events-none">%</span>
+                                </div>
+                            </div>
+                            <input type="range" min="0" max="15" step="1" value="5" class="track-slider w-full" style="color: #10b981;" id="adv-mat-sav" oninput="handleFormattedSlider('adv-mat-sav')">
+                            <p class="text-xs text-slate-500 mt-2">За счет планирования и исключения срочных покупок по завышенным ценам.</p>
+                        </div>
+
+                        <!-- Устранение штрафов -->
+                        <div>
+                            <div class="flex justify-between items-center text-sm mb-2">
+                                <label for="adv-pen-sav-input" class="text-brand-green font-medium">устранение штрафов и переплат в год:</label>
+                                <div class="relative">
+                                    <input type="text" id="adv-pen-sav-input" class="bg-brand-green/10 border border-brand-green/30 text-brand-green text-right font-bold rounded-lg px-3 py-1.5 w-36 focus:border-brand-green focus:outline-none pr-8" value="1 000 000" oninput="handleFormattedInput('adv-pen-sav')">
+                                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 text-brand-green/70 pointer-events-none">₽</span>
+                                </div>
+                            </div>
+                            <input type="range" min="0" max="10000000" step="100000" value="1000000" class="track-slider w-full" style="color: #10b981;" id="adv-pen-sav" oninput="handleFormattedSlider('adv-pen-sav')">
+                            <p class="text-xs text-slate-500 mt-2">За счет внедрения платежного календаря и ликвидации кассовых разрывов.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок 2: Окупаемость -->
+                <div class="bg-brand-card border border-slate-700 rounded-2xl p-8 flex flex-col justify-between shadow-2xl relative">
+                    <div class="absolute -top-4 -right-4 w-24 h-24 bg-brand-accent rounded-full mix-blend-multiply filter blur-2xl opacity-20 pointer-events-none"></div>
+                    
+                    <div>
+                        <h3 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
+                            <i data-lucide="refresh-cw" class="w-6 h-6"></i>
+                            Окупаемость услуг
+                        </h3>
+                        <p class="text-sm text-slate-400 mb-4">выберите тариф финансового директора:</p>
+                        
+                        <div class="grid grid-cols-3 gap-3 mb-8">
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="cfo-tariff" value="50000" class="peer sr-only" onchange="updateAdvancedCalculators()">
+                                <div class="text-center p-3 rounded-xl border border-slate-600 peer-checked:bg-brand-accent peer-checked:border-brand-accent hover:border-slate-500 transition text-sm">
+                                    <div class="font-bold text-white mb-1">Антикризис</div>
+                                    <div class="text-slate-300 text-xs">50 тыс. ₽/мес</div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="cfo-tariff" value="90000" class="peer sr-only" checked onchange="updateAdvancedCalculators()">
+                                <div class="text-center p-3 rounded-xl border border-slate-600 peer-checked:bg-brand-accent peer-checked:border-brand-accent hover:border-slate-500 transition text-sm">
+                                    <div class="font-bold text-white mb-1">Рост</div>
+                                    <div class="text-slate-300 text-xs">90 тыс. ₽/мес</div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="cfo-tariff" value="150000" class="peer sr-only" onchange="updateAdvancedCalculators()">
+                                <div class="text-center p-3 rounded-xl border border-slate-600 peer-checked:bg-brand-accent peer-checked:border-brand-accent hover:border-slate-500 transition text-sm">
+                                    <div class="font-bold text-white mb-1">Масштаб</div>
+                                    <div class="text-slate-300 text-xs">150 тыс. ₽/мес</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center pb-4 border-b border-slate-700">
+                                <span class="text-slate-400">доп. прибыль за год:</span>
+                                <span class="text-2xl font-bold text-brand-green" id="res-extra-profit">3 500 000 ₽</span>
+                            </div>
+                            <div class="flex justify-between items-center pb-4 border-b border-slate-700">
+                                <span class="text-slate-400">возврат на инвестиции (ROI):</span>
+                                <span class="text-2xl font-bold text-white" id="res-roi">324%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 bg-slate-800 p-6 rounded-xl border border-slate-600 text-center">
+                        <div class="text-slate-400 text-sm mb-2">услуги CFO окупятся через:</div>
+                        <div class="text-4xl font-extrabold text-brand-accent" id="res-payback">9 дней</div>
+                        <p class="text-xs text-slate-500 mt-3 border-t border-slate-700 pt-3" id="res-multiplier-text">Каждый вложенный в нас рубль принесет <span id="res-multiplier" class="text-white font-bold">3.2</span> рубля чистой прибыли.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center text-slate-500 text-xs max-w-2xl mx-auto">
+                * данный расчет-оцифровка носит справочный характер. точные метрики индивидуально рассчитываются на этапе проработки контракта.
+            </div>
+        </div>
+    </section>
+
+    <!-- Экран 6: Пакеты услуг -->
+    <section id="pricing" class="py-24 bg-slate-50 scroll-mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-bold mb-4">Прозрачные инвестиции в порядок</h2>
+                <p class="text-slate-500 text-lg">Выберите формат работы, который подходит текущей стадии вашего бизнеса.</p>
+            </div>
+            <div class="text-center mb-16">
+                 <span class="inline-block bg-white border border-slate-200 rounded-full px-4 py-2 text-sm text-slate-600 shadow-sm">
+                     Дешевле, чем нанимать CFO в штат (от 150 000 руб/мес). Надежнее, чем поручать рядовому бухгалтеру.
+                 </span>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8 items-center max-w-6xl mx-auto">
+                <div class="bg-white border border-slate-200 rounded-2xl p-8 hover:shadow-xl transition">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Пакет: антикризис</h3>
+                    <p class="text-slate-500 text-sm mb-6 h-10">Экстренное наведение порядка и ликвидация кассовых разрывов.</p>
+                    <div class="text-3xl font-extrabold mb-6">от 50 000 ₽<span class="text-base font-normal text-slate-400">/мес</span></div>
+                    <ul class="space-y-3 mb-8 text-sm text-slate-700">
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-green flex-shrink-0"></i> Внедрение базового ДДС</li>
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-green flex-shrink-0"></i> Настройка платежного календаря</li>
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-green flex-shrink-0"></i> План выхода из кассового разрыва</li>
+                        <li class="flex items-start gap-2 text-slate-400"><i data-lucide="minus" class="w-5 h-5 flex-shrink-0"></i> Сборка Баланса и ОПиУ</li>
+                    </ul>
+                    <button type="button" data-scroll-to="contact" class="block w-full text-center border-2 border-slate-200 hover:border-brand-dark hover:bg-brand-dark hover:text-white text-slate-800 py-3 rounded-xl font-bold transition">Выбрать</button>
+                </div>
+
+                <div class="bg-brand-dark text-white rounded-2xl p-8 shadow-2xl transform lg:scale-105 relative border border-brand-accent/30">
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-brand-accent text-white px-4 py-1 rounded-full text-sm font-bold shadow-lg">
+                        Самый популярный
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Пакет: стабильный рост</h3>
+                    <p class="text-slate-300 text-sm mb-6 h-10">Полный управленческий учет и регулярные стратегические сессии.</p>
+                    <div class="text-3xl font-extrabold mb-6 text-white">от 90 000 ₽<span class="text-base font-normal text-slate-400">/мес</span></div>
+                    <ul class="space-y-3 mb-8 text-sm text-slate-300">
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-accent flex-shrink-0"></i> Всё из пакета "Антикризис"</li>
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-accent flex-shrink-0"></i> Сборка всех 3 отчетов (ДДС, ОПиУ, Баланс)</li>
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-accent flex-shrink-0"></i> Расчет себестоимости объектов</li>
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-accent flex-shrink-0"></i> Интерактивный дашборд руководителя</li>
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-accent flex-shrink-0"></i> 2 онлайн-встречи в месяц с CFO</li>
+                    </ul>
+                    <button type="button" data-scroll-to="contact" class="block w-full text-center bg-brand-accent hover:bg-brand-accentHover text-white py-3 rounded-xl font-bold transition shadow-lg shadow-brand-accent/20">Выбрать оптимум</button>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-2xl p-8 hover:shadow-xl transition">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Пакет: масштаб</h3>
+                    <p class="text-slate-500 text-sm mb-6 h-10">Для компаний с несколькими направлениями и потребностью в инвестициях.</p>
+                    <div class="text-3xl font-extrabold mb-6">от 150 000 ₽<span class="text-base font-normal text-slate-400">/мес</span></div>
+                    <ul class="space-y-3 mb-8 text-sm text-slate-700">
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-green flex-shrink-0"></i> Всё из пакета "Стабильный рост"</li>
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-green flex-shrink-0"></i> Юнит-экономика новых направлений</li>
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-green flex-shrink-0"></i> Финансовое моделирование на 1-3 года</li>
+                        <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-green flex-shrink-0"></i> Подготовка документов для кредитов</li>
+                    </ul>
+                    <button type="button" data-scroll-to="contact" class="block w-full text-center border-2 border-slate-200 hover:border-brand-dark hover:bg-brand-dark hover:text-white text-slate-800 py-3 rounded-xl font-bold transition">Обсудить масштаб</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Экран 7: Закрытие (CTA Форма) -->
+    <section id="contact" class="py-24 bg-brand-dark relative overflow-hidden scroll-mt-20">
+        <div class="absolute inset-0 bg-gradient-to-br from-brand-dark to-slate-900"></div>
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+                <div class="bg-slate-50 p-10 md:w-5/12 border-r border-slate-200 flex flex-col justify-center">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4">Давайте посчитаем, сколько денег вы можете сэкономить уже в этом месяце.</h2>
+                    <p class="text-slate-600 mb-8">Запишитесь на бесплатную 30-минутную диагностику вашей текущей финансовой модели.</p>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                            </div>
+                            <span class="text-sm font-medium">Найдем узкие места</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                            </div>
+                            <span class="text-sm font-medium">Покажем точки роста маржи</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-10 md:w-7/12 bg-white flex flex-col justify-center">
+                    <div class="text-center md:text-left mb-6">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-2">Напишите мне напрямую</h3>
+                        <p class="text-slate-600">без заполнения анкет и долгих ожиданий. перейдите в телеграм, и мы выберем время для созвона.</p>
+                    </div>
+                    <a href="https://t.me/polina_skra" target="_blank" rel="noopener noreferrer" class="w-full bg-[#2AABEE] hover:bg-[#2298D6] text-white py-4 rounded-xl font-bold text-lg transition shadow-lg shadow-[#2AABEE]/30 flex justify-center items-center gap-2">
+                        Записаться на разбор
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </a>
+                    <p class="text-xs text-center md:text-left text-slate-400 mt-4">откроется приложение Telegram</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        lucide.createIcons();
+
+        // Форматирование чисел пробелами (разрядность)
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+
+        // Очистка строки от всего кроме цифр
+        function cleanNumber(str) {
+            return str.replace(/\D/g, '');
+        }
+
+        function declOfNum(n, text_forms) {  
+            n = Math.abs(n) % 100; 
+            var n1 = n % 10;
+            if (n > 10 && n < 20) { return text_forms[2]; }
+            if (n1 > 1 && n1 < 5) { return text_forms[1]; }
+            if (n1 == 1) { return text_forms[0]; }
+            return text_forms[2];
+        }
+
+        // --- Логика верхнего дашборда ---
+        const revenueSlider = document.getElementById('revenue-slider');
+        const costSlider = document.getElementById('cost-slider');
+        const revenueValueDisplay = document.getElementById('revenue-value');
+        const costValueDisplay = document.getElementById('cost-value');
+        const profitValueDisplay = document.getElementById('profit-value');
+        const revenueBar = document.getElementById('revenue-bar');
+        const costBar = document.getElementById('cost-bar');
+        const profitBar = document.getElementById('profit-bar');
+        const profitGrowthPercentDisplay = document.getElementById('profit-growth-percent');
+
+        function updateDashboard() {
+            let revenue = parseInt(revenueSlider.value);
+            let cost = parseInt(costSlider.value);
+
+            if (cost > revenue) {
+                cost = revenue;
+                costSlider.value = cost;
+            }
+            
+            const profit = revenue - cost;
+            const maxRevenue = parseInt(revenueSlider.max);
+            const baseProfit = 45200000 - 32100000;
+
+            revenueValueDisplay.textContent = formatNumber(revenue) + ' ₽';
+            costValueDisplay.textContent = formatNumber(cost) + ' ₽';
+            profitValueDisplay.textContent = formatNumber(profit) + ' ₽';
+
+            revenueBar.style.width = `${(revenue / maxRevenue) * 100}%`;
+            costBar.style.width = `${(cost / revenue) * 100}%`;
+            profitBar.style.width = `${(profit / revenue) * 100}%`;
+
+            const growth = ((profit - baseProfit) / baseProfit) * 100;
+            profitGrowthPercentDisplay.textContent = growth > 0 ? `+${growth.toFixed(1)}` : growth.toFixed(1);
+            
+            const summaryText = document.getElementById('profit-growth-summary');
+            const summaryIcon = summaryText.querySelector('i') || summaryText.querySelector('svg');
+            
+            if (summaryIcon) {
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', growth >= 0 ? 'trending-up' : 'trending-down');
+                newIcon.className = 'w-4 h-4';
+                summaryIcon.replaceWith(newIcon);
+            }
+
+            if (growth >= 0) {
+                summaryText.classList.remove('text-brand-red');
+                summaryText.classList.add('text-brand-green');
+            } else {
+                summaryText.classList.remove('text-brand-green');
+                summaryText.classList.add('text-brand-red');
+            }
+            lucide.createIcons();
+        }
+
+        // --- Логика продвинутого калькулятора ---
+        
+        // Синхронизация ввода текста в ползунок
+        function handleFormattedInput(id) {
+            const input = document.getElementById(id + '-input');
+            const slider = document.getElementById(id);
+            
+            let rawValue = cleanNumber(input.value);
+            if (rawValue === '') rawValue = '0';
+            
+            let val = parseInt(rawValue);
+            const max = parseInt(slider.max);
+            
+            // Ограничиваем только верхний предел при вводе
+            if (val > max) val = max;
+            
+            // Обновляем ползунок
+            slider.value = val;
+            // Форматируем обратно в инпут
+            input.value = formatNumber(val);
+            
+            updateAdvancedCalculators();
+        }
+
+        // Синхронизация ползунка в текстовое поле
+        function handleFormattedSlider(id) {
+            const slider = document.getElementById(id);
+            const input = document.getElementById(id + '-input');
+            input.value = formatNumber(slider.value);
+            updateAdvancedCalculators();
+        }
+
+        function updateAdvancedCalculators() {
+            // Выручка в тысячах (умножаем на 1000 для расчета реальной прибыли)
+            const revThousands = parseInt(cleanNumber(document.getElementById('adv-rev-input').value)) || 0;
+            const rev = revThousands * 1000;
+            
+            const matShare = (parseInt(cleanNumber(document.getElementById('adv-mat-share-input').value)) || 0) / 100;
+            const matSav = (parseInt(cleanNumber(document.getElementById('adv-mat-sav-input').value)) || 0) / 100;
+            const penSav = parseInt(cleanNumber(document.getElementById('adv-pen-sav-input').value)) || 0;
+
+            // Расчет доп прибыли
+            const matCost = rev * matShare;
+            const extraProfitMaterials = matCost * matSav;
+            const extraProfitYear = Math.round(extraProfitMaterials + penSav);
+            const extraProfitMonth = extraProfitYear / 12;
+
+            // Стоимость CFO
+            let cfoCostMonth = 90000;
+            document.getElementsByName('cfo-tariff').forEach(radio => {
+                if(radio.checked) cfoCostMonth = parseInt(radio.value);
+            });
+            const cfoCostYear = cfoCostMonth * 12;
+
+            // Расчет окупаемости (ROI)
+            // Формула: (Доход от вложений - Сумма вложений) / Сумма вложений * 100
+            const netBenefitYear = extraProfitYear - cfoCostYear;
+            const roi = cfoCostYear > 0 ? (netBenefitYear / cfoCostYear) * 100 : 0;
+            
+            let paybackStr = "не окупается";
+            let isProfitable = netBenefitYear >= 0;
+
+            if (isProfitable && extraProfitMonth > 0) {
+                const paybackMonths = cfoCostMonth / extraProfitMonth;
+                if (paybackMonths < 1) {
+                    const days = Math.round(paybackMonths * 30);
+                    paybackStr = days + " " + declOfNum(days, ['день', 'дня', 'дней']);
+                } else {
+                    const months = Math.round(paybackMonths * 10) / 10;
+                    paybackStr = months + " мес.";
+                }
+            }
+
+            const multiplier = cfoCostYear > 0 ? (extraProfitYear / cfoCostYear).toFixed(1) : 0;
+
+            // Обновление UI
+            document.getElementById('res-extra-profit').textContent = formatNumber(extraProfitYear) + ' ₽';
+            
+            const roiEl = document.getElementById('res-roi');
+            roiEl.textContent = formatNumber(Math.round(roi)) + '%';
+            
+            const paybackEl = document.getElementById('res-payback');
+            const multiplierTextEl = document.getElementById('res-multiplier-text');
+            
+            if (isProfitable) {
+                roiEl.className = "text-2xl font-bold text-brand-green";
+                paybackEl.textContent = paybackStr;
+                paybackEl.className = "text-4xl font-extrabold text-brand-accent";
+                multiplierTextEl.innerHTML = `Каждый вложенный в нас рубль принесет <span id="res-multiplier" class="text-white font-bold">${multiplier}</span> рубля чистой прибыли.`;
+            } else {
+                roiEl.className = "text-2xl font-bold text-brand-red";
+                paybackEl.textContent = "не окупается";
+                paybackEl.className = "text-4xl font-extrabold text-brand-red";
+                multiplierTextEl.innerHTML = `<span class="text-brand-red">Сумма дополнительной прибыли не перекрывает стоимость услуг на выбранном тарифе.</span>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDashboard();
+            updateAdvancedCalculators();
+            
+            // Надежный перехват кликов для навигации по якорным ссылкам
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    if (targetId) {
+                        const el = document.getElementById(targetId);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                });
+            });
+        });
+
+        // Остальные скрипты (Квиз, Слайдер Б/С, Табы, Форма)
+        function nextStep(stepNum, answer) {
+            document.querySelectorAll('.quiz-step').forEach(el => el.classList.add('hidden'));
+            const nextEl = document.getElementById(`step-${stepNum}`);
+            if (nextEl) {
+                nextEl.classList.remove('hidden');
+                nextEl.classList.add('fade-in');
+            }
+        }
+
+        function showResult(answer) {
+            document.querySelectorAll('.quiz-step').forEach(el => el.classList.add('hidden'));
+            const resEl = document.getElementById('quiz-result');
+            resEl.classList.remove('hidden');
+        }
+
+        function updateSlider(val) {
+            const beforeLayer = document.getElementById('before-layer');
+            const handle = document.getElementById('ba-handle');
+            beforeLayer.style.clipPath = `polygon(0 0, ${val}% 0, ${val}% 100%, 0 100%)`;
+            handle.style.left = `${val}%`;
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'border-slate-200', 'shadow-sm', 'text-brand-accent');
+                btn.classList.add('text-slate-600');
+                if(btn.classList.contains('border')) {
+                     btn.classList.remove('border');
+                }
+            });
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.remove('text-slate-600');
+            activeBtn.classList.add('bg-white', 'border', 'border-slate-200', 'shadow-sm', 'text-brand-accent');
+
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.classList.remove('fade-in');
+            });
+            const activeContent = document.getElementById(`content-${tabId}`);
+            activeContent.classList.remove('hidden');
+            setTimeout(() => {
+                activeContent.classList.add('fade-in');
+            }, 10);
+        }
+    </script>
+</body>
+</html>
