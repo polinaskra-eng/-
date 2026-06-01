@@ -141,7 +141,7 @@
             appearance: none;
             width: 100%;
             height: 8px;
-            background: #334155; /* slate-700 - цвет линии */
+            background: #334155;
             border-radius: 9999px;
             outline: none;
             cursor: pointer;
@@ -154,11 +154,10 @@
             background: white;
             border-radius: 50%;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            border: 3px solid currentColor; /* цвет обводки берется из style="color:..." */
+            border: 3px solid currentColor;
             margin-top: 0;
         }
 
-        /* Цвета обводки ползунков для разных метрик */
         #revenue-slider::-webkit-slider-thumb { color: #3b82f6; }
         #cost-slider::-webkit-slider-thumb { color: #ea580c; }
 
@@ -211,10 +210,10 @@
                         Настроим прозрачный управленческий учет за 14 дней. Избавим от кассовых разрывов и найдем скрытые деньги на ваших объектах без найма дорогого CFO в штат.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                        <button type="button" data-scroll-to="quiz" class="bg-brand-accent hover:bg-brand-accentHover text-white text-center px-8 py-4 rounded-xl font-bold text-lg transition shadow-lg shadow-brand-accent/30 flex items-center justify-center gap-2">
+                        <a href="#contact" class="bg-brand-accent hover:bg-brand-accentHover text-white text-center px-8 py-4 rounded-xl font-bold text-lg transition shadow-lg shadow-brand-accent/30 flex items-center justify-center gap-2">
                             Узнать, где мы теряем деньги
                             <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                        </button>
+                        </a>
                     </div>
                 </div>
                 
@@ -677,7 +676,7 @@
                         <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-green flex-shrink-0"></i> План выхода из кассового разрыва</li>
                         <li class="flex items-start gap-2 text-slate-400"><i data-lucide="minus" class="w-5 h-5 flex-shrink-0"></i> Сборка Баланса и ОПиУ</li>
                     </ul>
-                    <button type="button" data-scroll-to="contact" class="block w-full text-center border-2 border-slate-200 hover:border-brand-dark hover:bg-brand-dark hover:text-white text-slate-800 py-3 rounded-xl font-bold transition">Выбрать</button>
+                    <a href="#contact" class="block w-full text-center border-2 border-slate-200 hover:border-brand-dark hover:bg-brand-dark hover:text-white text-slate-800 py-3 rounded-xl font-bold transition">Выбрать</a>
                 </div>
 
                 <div class="bg-brand-dark text-white rounded-2xl p-8 shadow-2xl transform lg:scale-105 relative border border-brand-accent/30">
@@ -694,7 +693,7 @@
                         <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-accent flex-shrink-0"></i> Интерактивный дашборд руководителя</li>
                         <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-accent flex-shrink-0"></i> 2 онлайн-встречи в месяц с CFO</li>
                     </ul>
-                    <button type="button" data-scroll-to="contact" class="block w-full text-center bg-brand-accent hover:bg-brand-accentHover text-white py-3 rounded-xl font-bold transition shadow-lg shadow-brand-accent/20">Выбрать оптимум</button>
+                    <a href="#contact" class="block w-full text-center bg-brand-accent hover:bg-brand-accentHover text-white py-3 rounded-xl font-bold transition shadow-lg shadow-brand-accent/20">Выбрать оптимум</a>
                 </div>
 
                 <div class="bg-white border border-slate-200 rounded-2xl p-8 hover:shadow-xl transition">
@@ -707,13 +706,13 @@
                         <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-green flex-shrink-0"></i> Финансовое моделирование на 1-3 года</li>
                         <li class="flex items-start gap-2"><i data-lucide="check" class="w-5 h-5 text-brand-green flex-shrink-0"></i> Подготовка документов для кредитов</li>
                     </ul>
-                    <button type="button" data-scroll-to="contact" class="block w-full text-center border-2 border-slate-200 hover:border-brand-dark hover:bg-brand-dark hover:text-white text-slate-800 py-3 rounded-xl font-bold transition">Обсудить масштаб</button>
+                    <a href="#contact" class="block w-full text-center border-2 border-slate-200 hover:border-brand-dark hover:bg-brand-dark hover:text-white text-slate-800 py-3 rounded-xl font-bold transition">Обсудить масштаб</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Экран 7: Закрытие (CTA Форма) -->
+    <!-- Экран 7: Закрытие (Контакты) -->
     <section id="contact" class="py-24 bg-brand-dark relative overflow-hidden scroll-mt-20">
         <div class="absolute inset-0 bg-gradient-to-br from-brand-dark to-slate-900"></div>
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -755,12 +754,10 @@
     <script>
         lucide.createIcons();
 
-        // Форматирование чисел пробелами (разрядность)
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
         }
 
-        // Очистка строки от всего кроме цифр
         function cleanNumber(str) {
             return str.replace(/\D/g, '');
         }
@@ -774,7 +771,6 @@
             return text_forms[2];
         }
 
-        // --- Логика верхнего дашборда ---
         const revenueSlider = document.getElementById('revenue-slider');
         const costSlider = document.getElementById('cost-slider');
         const revenueValueDisplay = document.getElementById('revenue-value');
@@ -829,9 +825,6 @@
             lucide.createIcons();
         }
 
-        // --- Логика продвинутого калькулятора ---
-        
-        // Синхронизация ввода текста в ползунок
         function handleFormattedInput(id) {
             const input = document.getElementById(id + '-input');
             const slider = document.getElementById(id);
@@ -842,18 +835,14 @@
             let val = parseInt(rawValue);
             const max = parseInt(slider.max);
             
-            // Ограничиваем только верхний предел при вводе
             if (val > max) val = max;
             
-            // Обновляем ползунок
             slider.value = val;
-            // Форматируем обратно в инпут
             input.value = formatNumber(val);
             
             updateAdvancedCalculators();
         }
 
-        // Синхронизация ползунка в текстовое поле
         function handleFormattedSlider(id) {
             const slider = document.getElementById(id);
             const input = document.getElementById(id + '-input');
@@ -862,7 +851,6 @@
         }
 
         function updateAdvancedCalculators() {
-            // Выручка в тысячах (умножаем на 1000 для расчета реальной прибыли)
             const revThousands = parseInt(cleanNumber(document.getElementById('adv-rev-input').value)) || 0;
             const rev = revThousands * 1000;
             
@@ -870,21 +858,17 @@
             const matSav = (parseInt(cleanNumber(document.getElementById('adv-mat-sav-input').value)) || 0) / 100;
             const penSav = parseInt(cleanNumber(document.getElementById('adv-pen-sav-input').value)) || 0;
 
-            // Расчет доп прибыли
             const matCost = rev * matShare;
             const extraProfitMaterials = matCost * matSav;
             const extraProfitYear = Math.round(extraProfitMaterials + penSav);
             const extraProfitMonth = extraProfitYear / 12;
 
-            // Стоимость CFO
             let cfoCostMonth = 90000;
             document.getElementsByName('cfo-tariff').forEach(radio => {
                 if(radio.checked) cfoCostMonth = parseInt(radio.value);
             });
             const cfoCostYear = cfoCostMonth * 12;
 
-            // Расчет окупаемости (ROI)
-            // Формула: (Доход от вложений - Сумма вложений) / Сумма вложений * 100
             const netBenefitYear = extraProfitYear - cfoCostYear;
             const roi = cfoCostYear > 0 ? (netBenefitYear / cfoCostYear) * 100 : 0;
             
@@ -904,7 +888,6 @@
 
             const multiplier = cfoCostYear > 0 ? (extraProfitYear / cfoCostYear).toFixed(1) : 0;
 
-            // Обновление UI
             document.getElementById('res-extra-profit').textContent = formatNumber(extraProfitYear) + ' ₽';
             
             const roiEl = document.getElementById('res-roi');
@@ -930,7 +913,6 @@
             updateDashboard();
             updateAdvancedCalculators();
             
-            // Надежный перехват кликов для навигации по якорным ссылкам
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -945,7 +927,6 @@
             });
         });
 
-        // Остальные скрипты (Квиз, Слайдер Б/С, Табы, Форма)
         function nextStep(stepNum, answer) {
             document.querySelectorAll('.quiz-step').forEach(el => el.classList.add('hidden'));
             const nextEl = document.getElementById(`step-${stepNum}`);
